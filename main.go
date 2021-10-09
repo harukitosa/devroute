@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -15,13 +16,61 @@ import (
 	"github.com/labstack/echo/middleware"
 )
 
+func mustGetenv(k string) string {
+	v := os.Getenv(k)
+	if v == "" {
+		log.Fatalf("Warning: %s environment variable not set.\n", k)
+	}
+	return v
+}
+
+func initDB() (*ent.Client, error) {
+	var (
+		dbUser                 = mustGetenv("DB_USER")
+		dbPwd                  = mustGetenv("DB_PASS")
+		instanceConnectionName = mustGetenv("INSTANCE_CONNECTION_NAME")
+		dbName                 = mustGetenv("DB_NAME")
+	)
+
+	socketDir, isSet := os.LookupEnv("DB_SOCKET_DIR")
+	if !isSet {
+		socketDir = "/cloudsql"
+	}
+
+	dns := fmt.Sprintf("%s:%s@unix(/%s/%s)/%s?parseTime=true", dbUser, dbPwd, socketDir, instanceConnectionName, dbName)
+	db, err := ent.Open("mysql", dns)
+	if err != nil {
+		return nil, err
+	}
+	return db, nil
+}
+
+func initLocalDB() (*ent.Client, error) {
+	dns := "root:root@tcp(127.0.0.1:3306)/devroute?charset=utf8mb4&parseTime=True&loc=Local"
+	client, err := ent.Open("mysql", dns)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
+}
+
 func main() {
 
-	// connect db and migration
-	client, err := ent.Open("mysql", "root:root@tcp(localhost:3306)/devroute")
-	if err != nil {
-		log.Fatalf("failed connecting to mysql: %v", err)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
+	v := os.Getenv("RUNENV")
+
+	var client *ent.Client
+	var err error
+	if v == "production" {
+		client, err = initDB()
+	} else {
+		client, err = initLocalDB()
+	}
+
+	// connect db and migration
 	defer client.Close()
 	ctx := context.Background()
 	err = client.Schema.Create(
@@ -94,5 +143,3 @@ func login(c echo.Context) error {
 		"token": t,
 	})
 }
-
-// curl -X POST -H "Content-Type: application/json" -d '{"user_name":"taro", "Password": "shhh!"}' localhost:8080/login
