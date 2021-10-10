@@ -8,12 +8,13 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
+	"strings"
 
-	"github.com/dgrijalva/jwt-go"
+	firebase "firebase.google.com/go/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"google.golang.org/api/option"
 )
 
 func mustGetenv(k string) string {
@@ -54,6 +55,8 @@ func initLocalDB() (*ent.Client, error) {
 	return client, nil
 }
 
+var app *firebase.App
+
 func main() {
 
 	port := os.Getenv("PORT")
@@ -82,64 +85,51 @@ func main() {
 		log.Fatalf("failed creating schema resources: %v", err)
 	}
 
+	opt := option.WithCredentialsFile("./devroute-firebase-adminsdk.json")
+	app, err = firebase.NewApp(context.Background(), nil, opt)
+	if err != nil {
+		fmt.Printf("error: %v\n", err)
+	}
+
 	router := echo.New()
+	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"http://localhost:3000"},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization},
+	}))
 	router.Use(middleware.Logger())
 	router.Use(middleware.Recover())
-	router.POST("/login", login)
 	router.GET("/", topHandler)
-
-	r := router.Group("/restricted")
-	r.Use(middleware.JWT([]byte("secret")))
-	r.GET("", restricted)
+	router.GET("/private", echoAuthMiddleware(privateHandler))
 	router.Start(":8080")
 }
 
-func restricted(c echo.Context) error {
-	user, ok := c.Get("user").(*jwt.Token)
-	if !ok {
-		return fmt.Errorf("failed to parse")
-	}
-	claims, ok := user.Claims.(jwt.MapClaims)
-	if !ok {
-		return fmt.Errorf("failed to parse")
-	}
-	name := claims["name"].(string)
-	return c.String(http.StatusOK, "Welcome "+name+"!")
-}
-
 func topHandler(c echo.Context) error {
-	return c.String(http.StatusOK, "OK")
+	return c.JSON(http.StatusOK, "OK")
 }
 
-type UserDto struct {
-	UserName string `json:"user_name"`
-	Password string `json:"password"`
+func privateHandler(c echo.Context) error {
+	return c.JSON(http.StatusOK, "OK private")
 }
 
-func login(c echo.Context) error {
-	user := UserDto{}
-	err := c.Bind(&user)
-	if err != nil {
-		return err
+func echoAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		log.Println("before action")
+		auth, err := app.Auth(context.Background())
+		if err != nil {
+			fmt.Printf("error: %v\n", err)
+		}
+		authHeader := c.Request().Header.Get("Authorization")
+		idToken := strings.Replace(authHeader, "Bearer ", "", 1)
+		token, err := auth.VerifyIDToken(context.Background(), idToken)
+		if err != nil {
+			fmt.Printf("error verifying ID token: %v\n", err)
+			return c.JSON(http.StatusUnauthorized, "unauthorized")
+		}
+		log.Println(token)
+		if err := next(c); err != nil {
+			c.Error(err)
+		}
+		log.Println("after action")
+		return nil
 	}
-
-	if user.UserName != "taro" || user.Password != "shhh!" {
-		return echo.ErrUnauthorized
-	}
-
-	token := jwt.New(jwt.SigningMethodHS256)
-
-	claims := token.Claims.(jwt.MapClaims)
-	claims["name"] = "Taro"
-	claims["admin"] = true
-	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
-
-	t, err := token.SignedString([]byte("secret"))
-	if err != nil {
-		return err
-	}
-
-	return c.JSON(http.StatusOK, map[string]string{
-		"token": t,
-	})
 }

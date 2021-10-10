@@ -4,6 +4,8 @@ go 1.16
 
 require (
 	entgo.io/ent v0.9.1 // indirect
+	firebase.google.com/go v3.13.0+incompatible
+	firebase.google.com/go/v4 v4.6.0 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/joho/godotenv v1.4.0 // indirect
 	github.com/labstack/echo v3.3.10+incompatible // indirect
