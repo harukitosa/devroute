@@ -8,11 +8,87 @@ import (
 )
 
 var (
+	// AchievementsColumns holds the columns for the "achievements" table.
+	AchievementsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "title", Type: field.TypeString},
+		{Name: "start_time", Type: field.TypeTime},
+		{Name: "end_time", Type: field.TypeTime},
+		{Name: "content", Type: field.TypeString},
+	}
+	// AchievementsTable holds the schema information for the "achievements" table.
+	AchievementsTable = &schema.Table{
+		Name:       "achievements",
+		Columns:    AchievementsColumns,
+		PrimaryKey: []*schema.Column{AchievementsColumns[0]},
+	}
+	// CompaniesColumns holds the columns for the "companies" table.
+	CompaniesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "location", Type: field.TypeString},
+		{Name: "postal_code", Type: field.TypeString},
+		{Name: "phone_number", Type: field.TypeString},
+		{Name: "company_id", Type: field.TypeString},
+		{Name: "introduction", Type: field.TypeString},
+	}
+	// CompaniesTable holds the schema information for the "companies" table.
+	CompaniesTable = &schema.Table{
+		Name:       "companies",
+		Columns:    CompaniesColumns,
+		PrimaryKey: []*schema.Column{CompaniesColumns[0]},
+	}
+	// CompanyUsersColumns holds the columns for the "company_users" table.
+	CompanyUsersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "last_name", Type: field.TypeString},
+		{Name: "first_name", Type: field.TypeString},
+		{Name: "last_name_furigana", Type: field.TypeString},
+		{Name: "first_name_furigana", Type: field.TypeString},
+		{Name: "profile_name", Type: field.TypeString},
+		{Name: "icon_url", Type: field.TypeString},
+		{Name: "gender", Type: field.TypeEnum, Enums: []string{"male", "female", "other"}},
+	}
+	// CompanyUsersTable holds the schema information for the "company_users" table.
+	CompanyUsersTable = &schema.Table{
+		Name:       "company_users",
+		Columns:    CompanyUsersColumns,
+		PrimaryKey: []*schema.Column{CompanyUsersColumns[0]},
+	}
+	// DevelopersColumns holds the columns for the "developers" table.
+	DevelopersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "last_name", Type: field.TypeString},
+		{Name: "first_name", Type: field.TypeString},
+		{Name: "last_name_furigana", Type: field.TypeString},
+		{Name: "first_name_furigana", Type: field.TypeString},
+		{Name: "profile_name", Type: field.TypeString},
+		{Name: "icon_url", Type: field.TypeString},
+		{Name: "gender", Type: field.TypeEnum, Enums: []string{"male", "female", "other"}},
+	}
+	// DevelopersTable holds the schema information for the "developers" table.
+	DevelopersTable = &schema.Table{
+		Name:       "developers",
+		Columns:    DevelopersColumns,
+		PrimaryKey: []*schema.Column{DevelopersColumns[0]},
+	}
+	// RecruitmentsColumns holds the columns for the "recruitments" table.
+	RecruitmentsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "title", Type: field.TypeString},
+		{Name: "content", Type: field.TypeString},
+	}
+	// RecruitmentsTable holds the schema information for the "recruitments" table.
+	RecruitmentsTable = &schema.Table{
+		Name:       "recruitments",
+		Columns:    RecruitmentsColumns,
+		PrimaryKey: []*schema.Column{RecruitmentsColumns[0]},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "age", Type: field.TypeInt},
-		{Name: "name", Type: field.TypeString, Default: "unknown"},
+		{Name: "uid", Type: field.TypeString, Unique: true},
+		{Name: "email", Type: field.TypeString, Unique: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
@@ -22,6 +98,11 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		AchievementsTable,
+		CompaniesTable,
+		CompanyUsersTable,
+		DevelopersTable,
+		RecruitmentsTable,
 		UsersTable,
 	}
 )

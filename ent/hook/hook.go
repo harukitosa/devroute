@@ -8,6 +8,71 @@ import (
 	"fmt"
 )
 
+// The AchievementFunc type is an adapter to allow the use of ordinary
+// function as Achievement mutator.
+type AchievementFunc func(context.Context, *ent.AchievementMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AchievementFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.AchievementMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AchievementMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The CompanyFunc type is an adapter to allow the use of ordinary
+// function as Company mutator.
+type CompanyFunc func(context.Context, *ent.CompanyMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CompanyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.CompanyMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CompanyMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The CompanyUserFunc type is an adapter to allow the use of ordinary
+// function as CompanyUser mutator.
+type CompanyUserFunc func(context.Context, *ent.CompanyUserMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f CompanyUserFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.CompanyUserMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CompanyUserMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The DeveloperFunc type is an adapter to allow the use of ordinary
+// function as Developer mutator.
+type DeveloperFunc func(context.Context, *ent.DeveloperMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f DeveloperFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.DeveloperMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DeveloperMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The RecruitmentFunc type is an adapter to allow the use of ordinary
+// function as Recruitment mutator.
+type RecruitmentFunc func(context.Context, *ent.RecruitmentMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RecruitmentFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.RecruitmentMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RecruitmentMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The UserFunc type is an adapter to allow the use of ordinary
 // function as User mutator.
 type UserFunc func(context.Context, *ent.UserMutation) (ent.Value, error)

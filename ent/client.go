@@ -9,6 +9,11 @@ import (
 
 	"devroute/ent/migrate"
 
+	"devroute/ent/achievement"
+	"devroute/ent/company"
+	"devroute/ent/companyuser"
+	"devroute/ent/developer"
+	"devroute/ent/recruitment"
 	"devroute/ent/user"
 
 	"entgo.io/ent/dialect"
@@ -20,6 +25,16 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Achievement is the client for interacting with the Achievement builders.
+	Achievement *AchievementClient
+	// Company is the client for interacting with the Company builders.
+	Company *CompanyClient
+	// CompanyUser is the client for interacting with the CompanyUser builders.
+	CompanyUser *CompanyUserClient
+	// Developer is the client for interacting with the Developer builders.
+	Developer *DeveloperClient
+	// Recruitment is the client for interacting with the Recruitment builders.
+	Recruitment *RecruitmentClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 }
@@ -35,6 +50,11 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Achievement = NewAchievementClient(c.config)
+	c.Company = NewCompanyClient(c.config)
+	c.CompanyUser = NewCompanyUserClient(c.config)
+	c.Developer = NewDeveloperClient(c.config)
+	c.Recruitment = NewRecruitmentClient(c.config)
 	c.User = NewUserClient(c.config)
 }
 
@@ -67,9 +87,14 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		User:   NewUserClient(cfg),
+		ctx:         ctx,
+		config:      cfg,
+		Achievement: NewAchievementClient(cfg),
+		Company:     NewCompanyClient(cfg),
+		CompanyUser: NewCompanyUserClient(cfg),
+		Developer:   NewDeveloperClient(cfg),
+		Recruitment: NewRecruitmentClient(cfg),
+		User:        NewUserClient(cfg),
 	}, nil
 }
 
@@ -87,15 +112,20 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		config: cfg,
-		User:   NewUserClient(cfg),
+		config:      cfg,
+		Achievement: NewAchievementClient(cfg),
+		Company:     NewCompanyClient(cfg),
+		CompanyUser: NewCompanyUserClient(cfg),
+		Developer:   NewDeveloperClient(cfg),
+		Recruitment: NewRecruitmentClient(cfg),
+		User:        NewUserClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		User.
+//		Achievement.
 //		Query().
 //		Count(ctx)
 //
@@ -118,7 +148,462 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.Achievement.Use(hooks...)
+	c.Company.Use(hooks...)
+	c.CompanyUser.Use(hooks...)
+	c.Developer.Use(hooks...)
+	c.Recruitment.Use(hooks...)
 	c.User.Use(hooks...)
+}
+
+// AchievementClient is a client for the Achievement schema.
+type AchievementClient struct {
+	config
+}
+
+// NewAchievementClient returns a client for the Achievement from the given config.
+func NewAchievementClient(c config) *AchievementClient {
+	return &AchievementClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `achievement.Hooks(f(g(h())))`.
+func (c *AchievementClient) Use(hooks ...Hook) {
+	c.hooks.Achievement = append(c.hooks.Achievement, hooks...)
+}
+
+// Create returns a create builder for Achievement.
+func (c *AchievementClient) Create() *AchievementCreate {
+	mutation := newAchievementMutation(c.config, OpCreate)
+	return &AchievementCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Achievement entities.
+func (c *AchievementClient) CreateBulk(builders ...*AchievementCreate) *AchievementCreateBulk {
+	return &AchievementCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Achievement.
+func (c *AchievementClient) Update() *AchievementUpdate {
+	mutation := newAchievementMutation(c.config, OpUpdate)
+	return &AchievementUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *AchievementClient) UpdateOne(a *Achievement) *AchievementUpdateOne {
+	mutation := newAchievementMutation(c.config, OpUpdateOne, withAchievement(a))
+	return &AchievementUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *AchievementClient) UpdateOneID(id int) *AchievementUpdateOne {
+	mutation := newAchievementMutation(c.config, OpUpdateOne, withAchievementID(id))
+	return &AchievementUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Achievement.
+func (c *AchievementClient) Delete() *AchievementDelete {
+	mutation := newAchievementMutation(c.config, OpDelete)
+	return &AchievementDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *AchievementClient) DeleteOne(a *Achievement) *AchievementDeleteOne {
+	return c.DeleteOneID(a.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *AchievementClient) DeleteOneID(id int) *AchievementDeleteOne {
+	builder := c.Delete().Where(achievement.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &AchievementDeleteOne{builder}
+}
+
+// Query returns a query builder for Achievement.
+func (c *AchievementClient) Query() *AchievementQuery {
+	return &AchievementQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Achievement entity by its id.
+func (c *AchievementClient) Get(ctx context.Context, id int) (*Achievement, error) {
+	return c.Query().Where(achievement.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *AchievementClient) GetX(ctx context.Context, id int) *Achievement {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *AchievementClient) Hooks() []Hook {
+	return c.hooks.Achievement
+}
+
+// CompanyClient is a client for the Company schema.
+type CompanyClient struct {
+	config
+}
+
+// NewCompanyClient returns a client for the Company from the given config.
+func NewCompanyClient(c config) *CompanyClient {
+	return &CompanyClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `company.Hooks(f(g(h())))`.
+func (c *CompanyClient) Use(hooks ...Hook) {
+	c.hooks.Company = append(c.hooks.Company, hooks...)
+}
+
+// Create returns a create builder for Company.
+func (c *CompanyClient) Create() *CompanyCreate {
+	mutation := newCompanyMutation(c.config, OpCreate)
+	return &CompanyCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Company entities.
+func (c *CompanyClient) CreateBulk(builders ...*CompanyCreate) *CompanyCreateBulk {
+	return &CompanyCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Company.
+func (c *CompanyClient) Update() *CompanyUpdate {
+	mutation := newCompanyMutation(c.config, OpUpdate)
+	return &CompanyUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CompanyClient) UpdateOne(co *Company) *CompanyUpdateOne {
+	mutation := newCompanyMutation(c.config, OpUpdateOne, withCompany(co))
+	return &CompanyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CompanyClient) UpdateOneID(id int) *CompanyUpdateOne {
+	mutation := newCompanyMutation(c.config, OpUpdateOne, withCompanyID(id))
+	return &CompanyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Company.
+func (c *CompanyClient) Delete() *CompanyDelete {
+	mutation := newCompanyMutation(c.config, OpDelete)
+	return &CompanyDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *CompanyClient) DeleteOne(co *Company) *CompanyDeleteOne {
+	return c.DeleteOneID(co.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *CompanyClient) DeleteOneID(id int) *CompanyDeleteOne {
+	builder := c.Delete().Where(company.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CompanyDeleteOne{builder}
+}
+
+// Query returns a query builder for Company.
+func (c *CompanyClient) Query() *CompanyQuery {
+	return &CompanyQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Company entity by its id.
+func (c *CompanyClient) Get(ctx context.Context, id int) (*Company, error) {
+	return c.Query().Where(company.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CompanyClient) GetX(ctx context.Context, id int) *Company {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *CompanyClient) Hooks() []Hook {
+	return c.hooks.Company
+}
+
+// CompanyUserClient is a client for the CompanyUser schema.
+type CompanyUserClient struct {
+	config
+}
+
+// NewCompanyUserClient returns a client for the CompanyUser from the given config.
+func NewCompanyUserClient(c config) *CompanyUserClient {
+	return &CompanyUserClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `companyuser.Hooks(f(g(h())))`.
+func (c *CompanyUserClient) Use(hooks ...Hook) {
+	c.hooks.CompanyUser = append(c.hooks.CompanyUser, hooks...)
+}
+
+// Create returns a create builder for CompanyUser.
+func (c *CompanyUserClient) Create() *CompanyUserCreate {
+	mutation := newCompanyUserMutation(c.config, OpCreate)
+	return &CompanyUserCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of CompanyUser entities.
+func (c *CompanyUserClient) CreateBulk(builders ...*CompanyUserCreate) *CompanyUserCreateBulk {
+	return &CompanyUserCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for CompanyUser.
+func (c *CompanyUserClient) Update() *CompanyUserUpdate {
+	mutation := newCompanyUserMutation(c.config, OpUpdate)
+	return &CompanyUserUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *CompanyUserClient) UpdateOne(cu *CompanyUser) *CompanyUserUpdateOne {
+	mutation := newCompanyUserMutation(c.config, OpUpdateOne, withCompanyUser(cu))
+	return &CompanyUserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *CompanyUserClient) UpdateOneID(id int) *CompanyUserUpdateOne {
+	mutation := newCompanyUserMutation(c.config, OpUpdateOne, withCompanyUserID(id))
+	return &CompanyUserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for CompanyUser.
+func (c *CompanyUserClient) Delete() *CompanyUserDelete {
+	mutation := newCompanyUserMutation(c.config, OpDelete)
+	return &CompanyUserDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *CompanyUserClient) DeleteOne(cu *CompanyUser) *CompanyUserDeleteOne {
+	return c.DeleteOneID(cu.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *CompanyUserClient) DeleteOneID(id int) *CompanyUserDeleteOne {
+	builder := c.Delete().Where(companyuser.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &CompanyUserDeleteOne{builder}
+}
+
+// Query returns a query builder for CompanyUser.
+func (c *CompanyUserClient) Query() *CompanyUserQuery {
+	return &CompanyUserQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a CompanyUser entity by its id.
+func (c *CompanyUserClient) Get(ctx context.Context, id int) (*CompanyUser, error) {
+	return c.Query().Where(companyuser.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *CompanyUserClient) GetX(ctx context.Context, id int) *CompanyUser {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *CompanyUserClient) Hooks() []Hook {
+	return c.hooks.CompanyUser
+}
+
+// DeveloperClient is a client for the Developer schema.
+type DeveloperClient struct {
+	config
+}
+
+// NewDeveloperClient returns a client for the Developer from the given config.
+func NewDeveloperClient(c config) *DeveloperClient {
+	return &DeveloperClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `developer.Hooks(f(g(h())))`.
+func (c *DeveloperClient) Use(hooks ...Hook) {
+	c.hooks.Developer = append(c.hooks.Developer, hooks...)
+}
+
+// Create returns a create builder for Developer.
+func (c *DeveloperClient) Create() *DeveloperCreate {
+	mutation := newDeveloperMutation(c.config, OpCreate)
+	return &DeveloperCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Developer entities.
+func (c *DeveloperClient) CreateBulk(builders ...*DeveloperCreate) *DeveloperCreateBulk {
+	return &DeveloperCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Developer.
+func (c *DeveloperClient) Update() *DeveloperUpdate {
+	mutation := newDeveloperMutation(c.config, OpUpdate)
+	return &DeveloperUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *DeveloperClient) UpdateOne(d *Developer) *DeveloperUpdateOne {
+	mutation := newDeveloperMutation(c.config, OpUpdateOne, withDeveloper(d))
+	return &DeveloperUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *DeveloperClient) UpdateOneID(id int) *DeveloperUpdateOne {
+	mutation := newDeveloperMutation(c.config, OpUpdateOne, withDeveloperID(id))
+	return &DeveloperUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Developer.
+func (c *DeveloperClient) Delete() *DeveloperDelete {
+	mutation := newDeveloperMutation(c.config, OpDelete)
+	return &DeveloperDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *DeveloperClient) DeleteOne(d *Developer) *DeveloperDeleteOne {
+	return c.DeleteOneID(d.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *DeveloperClient) DeleteOneID(id int) *DeveloperDeleteOne {
+	builder := c.Delete().Where(developer.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &DeveloperDeleteOne{builder}
+}
+
+// Query returns a query builder for Developer.
+func (c *DeveloperClient) Query() *DeveloperQuery {
+	return &DeveloperQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Developer entity by its id.
+func (c *DeveloperClient) Get(ctx context.Context, id int) (*Developer, error) {
+	return c.Query().Where(developer.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *DeveloperClient) GetX(ctx context.Context, id int) *Developer {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *DeveloperClient) Hooks() []Hook {
+	return c.hooks.Developer
+}
+
+// RecruitmentClient is a client for the Recruitment schema.
+type RecruitmentClient struct {
+	config
+}
+
+// NewRecruitmentClient returns a client for the Recruitment from the given config.
+func NewRecruitmentClient(c config) *RecruitmentClient {
+	return &RecruitmentClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `recruitment.Hooks(f(g(h())))`.
+func (c *RecruitmentClient) Use(hooks ...Hook) {
+	c.hooks.Recruitment = append(c.hooks.Recruitment, hooks...)
+}
+
+// Create returns a create builder for Recruitment.
+func (c *RecruitmentClient) Create() *RecruitmentCreate {
+	mutation := newRecruitmentMutation(c.config, OpCreate)
+	return &RecruitmentCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Recruitment entities.
+func (c *RecruitmentClient) CreateBulk(builders ...*RecruitmentCreate) *RecruitmentCreateBulk {
+	return &RecruitmentCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Recruitment.
+func (c *RecruitmentClient) Update() *RecruitmentUpdate {
+	mutation := newRecruitmentMutation(c.config, OpUpdate)
+	return &RecruitmentUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RecruitmentClient) UpdateOne(r *Recruitment) *RecruitmentUpdateOne {
+	mutation := newRecruitmentMutation(c.config, OpUpdateOne, withRecruitment(r))
+	return &RecruitmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *RecruitmentClient) UpdateOneID(id int) *RecruitmentUpdateOne {
+	mutation := newRecruitmentMutation(c.config, OpUpdateOne, withRecruitmentID(id))
+	return &RecruitmentUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Recruitment.
+func (c *RecruitmentClient) Delete() *RecruitmentDelete {
+	mutation := newRecruitmentMutation(c.config, OpDelete)
+	return &RecruitmentDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *RecruitmentClient) DeleteOne(r *Recruitment) *RecruitmentDeleteOne {
+	return c.DeleteOneID(r.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *RecruitmentClient) DeleteOneID(id int) *RecruitmentDeleteOne {
+	builder := c.Delete().Where(recruitment.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &RecruitmentDeleteOne{builder}
+}
+
+// Query returns a query builder for Recruitment.
+func (c *RecruitmentClient) Query() *RecruitmentQuery {
+	return &RecruitmentQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Recruitment entity by its id.
+func (c *RecruitmentClient) Get(ctx context.Context, id int) (*Recruitment, error) {
+	return c.Query().Where(recruitment.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *RecruitmentClient) GetX(ctx context.Context, id int) *Recruitment {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *RecruitmentClient) Hooks() []Hook {
+	return c.hooks.Recruitment
 }
 
 // UserClient is a client for the User schema.

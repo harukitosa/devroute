@@ -3,6 +3,11 @@
 package ent
 
 import (
+	"devroute/ent/achievement"
+	"devroute/ent/company"
+	"devroute/ent/companyuser"
+	"devroute/ent/developer"
+	"devroute/ent/recruitment"
 	"devroute/ent/schema"
 	"devroute/ent/user"
 )
@@ -11,14 +16,122 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	achievementFields := schema.Achievement{}.Fields()
+	_ = achievementFields
+	// achievementDescTitle is the schema descriptor for title field.
+	achievementDescTitle := achievementFields[0].Descriptor()
+	// achievement.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	achievement.TitleValidator = achievementDescTitle.Validators[0].(func(string) error)
+	companyFields := schema.Company{}.Fields()
+	_ = companyFields
+	// companyDescName is the schema descriptor for name field.
+	companyDescName := companyFields[0].Descriptor()
+	// company.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	company.NameValidator = companyDescName.Validators[0].(func(string) error)
+	// companyDescLocation is the schema descriptor for location field.
+	companyDescLocation := companyFields[1].Descriptor()
+	// company.LocationValidator is a validator for the "location" field. It is called by the builders before save.
+	company.LocationValidator = companyDescLocation.Validators[0].(func(string) error)
+	// companyDescPostalCode is the schema descriptor for postal_code field.
+	companyDescPostalCode := companyFields[2].Descriptor()
+	// company.PostalCodeValidator is a validator for the "postal_code" field. It is called by the builders before save.
+	company.PostalCodeValidator = companyDescPostalCode.Validators[0].(func(string) error)
+	// companyDescPhoneNumber is the schema descriptor for phone_number field.
+	companyDescPhoneNumber := companyFields[3].Descriptor()
+	// company.PhoneNumberValidator is a validator for the "phone_number" field. It is called by the builders before save.
+	company.PhoneNumberValidator = companyDescPhoneNumber.Validators[0].(func(string) error)
+	// companyDescCompanyID is the schema descriptor for company_id field.
+	companyDescCompanyID := companyFields[4].Descriptor()
+	// company.CompanyIDValidator is a validator for the "company_id" field. It is called by the builders before save.
+	company.CompanyIDValidator = companyDescCompanyID.Validators[0].(func(string) error)
+	// companyDescIntroduction is the schema descriptor for introduction field.
+	companyDescIntroduction := companyFields[5].Descriptor()
+	// company.IntroductionValidator is a validator for the "introduction" field. It is called by the builders before save.
+	company.IntroductionValidator = companyDescIntroduction.Validators[0].(func(string) error)
+	companyuserFields := schema.CompanyUser{}.Fields()
+	_ = companyuserFields
+	// companyuserDescLastName is the schema descriptor for last_name field.
+	companyuserDescLastName := companyuserFields[0].Descriptor()
+	// companyuser.LastNameValidator is a validator for the "last_name" field. It is called by the builders before save.
+	companyuser.LastNameValidator = companyuserDescLastName.Validators[0].(func(string) error)
+	// companyuserDescFirstName is the schema descriptor for first_name field.
+	companyuserDescFirstName := companyuserFields[1].Descriptor()
+	// companyuser.FirstNameValidator is a validator for the "first_name" field. It is called by the builders before save.
+	companyuser.FirstNameValidator = companyuserDescFirstName.Validators[0].(func(string) error)
+	// companyuserDescLastNameFurigana is the schema descriptor for last_name_furigana field.
+	companyuserDescLastNameFurigana := companyuserFields[2].Descriptor()
+	// companyuser.LastNameFuriganaValidator is a validator for the "last_name_furigana" field. It is called by the builders before save.
+	companyuser.LastNameFuriganaValidator = companyuserDescLastNameFurigana.Validators[0].(func(string) error)
+	// companyuserDescFirstNameFurigana is the schema descriptor for first_name_furigana field.
+	companyuserDescFirstNameFurigana := companyuserFields[3].Descriptor()
+	// companyuser.FirstNameFuriganaValidator is a validator for the "first_name_furigana" field. It is called by the builders before save.
+	companyuser.FirstNameFuriganaValidator = companyuserDescFirstNameFurigana.Validators[0].(func(string) error)
+	// companyuserDescProfileName is the schema descriptor for profile_name field.
+	companyuserDescProfileName := companyuserFields[4].Descriptor()
+	// companyuser.ProfileNameValidator is a validator for the "profile_name" field. It is called by the builders before save.
+	companyuser.ProfileNameValidator = companyuserDescProfileName.Validators[0].(func(string) error)
+	// companyuserDescIconURL is the schema descriptor for icon_url field.
+	companyuserDescIconURL := companyuserFields[5].Descriptor()
+	// companyuser.IconURLValidator is a validator for the "icon_url" field. It is called by the builders before save.
+	companyuser.IconURLValidator = companyuserDescIconURL.Validators[0].(func(string) error)
+	developerFields := schema.Developer{}.Fields()
+	_ = developerFields
+	// developerDescLastName is the schema descriptor for last_name field.
+	developerDescLastName := developerFields[0].Descriptor()
+	// developer.LastNameValidator is a validator for the "last_name" field. It is called by the builders before save.
+	developer.LastNameValidator = developerDescLastName.Validators[0].(func(string) error)
+	// developerDescFirstName is the schema descriptor for first_name field.
+	developerDescFirstName := developerFields[1].Descriptor()
+	// developer.FirstNameValidator is a validator for the "first_name" field. It is called by the builders before save.
+	developer.FirstNameValidator = developerDescFirstName.Validators[0].(func(string) error)
+	// developerDescLastNameFurigana is the schema descriptor for last_name_furigana field.
+	developerDescLastNameFurigana := developerFields[2].Descriptor()
+	// developer.LastNameFuriganaValidator is a validator for the "last_name_furigana" field. It is called by the builders before save.
+	developer.LastNameFuriganaValidator = developerDescLastNameFurigana.Validators[0].(func(string) error)
+	// developerDescFirstNameFurigana is the schema descriptor for first_name_furigana field.
+	developerDescFirstNameFurigana := developerFields[3].Descriptor()
+	// developer.FirstNameFuriganaValidator is a validator for the "first_name_furigana" field. It is called by the builders before save.
+	developer.FirstNameFuriganaValidator = developerDescFirstNameFurigana.Validators[0].(func(string) error)
+	// developerDescProfileName is the schema descriptor for profile_name field.
+	developerDescProfileName := developerFields[4].Descriptor()
+	// developer.ProfileNameValidator is a validator for the "profile_name" field. It is called by the builders before save.
+	developer.ProfileNameValidator = developerDescProfileName.Validators[0].(func(string) error)
+	// developerDescIconURL is the schema descriptor for icon_url field.
+	developerDescIconURL := developerFields[5].Descriptor()
+	// developer.IconURLValidator is a validator for the "icon_url" field. It is called by the builders before save.
+	developer.IconURLValidator = developerDescIconURL.Validators[0].(func(string) error)
+	recruitmentFields := schema.Recruitment{}.Fields()
+	_ = recruitmentFields
+	// recruitmentDescTitle is the schema descriptor for title field.
+	recruitmentDescTitle := recruitmentFields[0].Descriptor()
+	// recruitment.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	recruitment.TitleValidator = recruitmentDescTitle.Validators[0].(func(string) error)
+	// recruitmentDescContent is the schema descriptor for content field.
+	recruitmentDescContent := recruitmentFields[1].Descriptor()
+	// recruitment.ContentValidator is a validator for the "content" field. It is called by the builders before save.
+	recruitment.ContentValidator = recruitmentDescContent.Validators[0].(func(string) error)
 	userFields := schema.User{}.Fields()
 	_ = userFields
-	// userDescAge is the schema descriptor for age field.
-	userDescAge := userFields[0].Descriptor()
-	// user.AgeValidator is a validator for the "age" field. It is called by the builders before save.
-	user.AgeValidator = userDescAge.Validators[0].(func(int) error)
-	// userDescName is the schema descriptor for name field.
-	userDescName := userFields[1].Descriptor()
-	// user.DefaultName holds the default value on creation for the name field.
-	user.DefaultName = userDescName.Default.(string)
+	// userDescUID is the schema descriptor for uid field.
+	userDescUID := userFields[0].Descriptor()
+	// user.UIDValidator is a validator for the "uid" field. It is called by the builders before save.
+	user.UIDValidator = userDescUID.Validators[0].(func(string) error)
+	// userDescEmail is the schema descriptor for email field.
+	userDescEmail := userFields[1].Descriptor()
+	// user.EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	user.EmailValidator = func() func(string) error {
+		validators := userDescEmail.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(email string) error {
+			for _, fn := range fns {
+				if err := fn(email); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
 }

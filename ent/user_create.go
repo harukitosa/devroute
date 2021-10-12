@@ -19,23 +19,15 @@ type UserCreate struct {
 	hooks    []Hook
 }
 
-// SetAge sets the "age" field.
-func (uc *UserCreate) SetAge(i int) *UserCreate {
-	uc.mutation.SetAge(i)
+// SetUID sets the "uid" field.
+func (uc *UserCreate) SetUID(s string) *UserCreate {
+	uc.mutation.SetUID(s)
 	return uc
 }
 
-// SetName sets the "name" field.
-func (uc *UserCreate) SetName(s string) *UserCreate {
-	uc.mutation.SetName(s)
-	return uc
-}
-
-// SetNillableName sets the "name" field if the given value is not nil.
-func (uc *UserCreate) SetNillableName(s *string) *UserCreate {
-	if s != nil {
-		uc.SetName(*s)
-	}
+// SetEmail sets the "email" field.
+func (uc *UserCreate) SetEmail(s string) *UserCreate {
+	uc.mutation.SetEmail(s)
 	return uc
 }
 
@@ -50,7 +42,6 @@ func (uc *UserCreate) Save(ctx context.Context) (*User, error) {
 		err  error
 		node *User
 	)
-	uc.defaults()
 	if len(uc.hooks) == 0 {
 		if err = uc.check(); err != nil {
 			return nil, err
@@ -108,26 +99,23 @@ func (uc *UserCreate) ExecX(ctx context.Context) {
 	}
 }
 
-// defaults sets the default values of the builder before save.
-func (uc *UserCreate) defaults() {
-	if _, ok := uc.mutation.Name(); !ok {
-		v := user.DefaultName
-		uc.mutation.SetName(v)
-	}
-}
-
 // check runs all checks and user-defined validators on the builder.
 func (uc *UserCreate) check() error {
-	if _, ok := uc.mutation.Age(); !ok {
-		return &ValidationError{Name: "age", err: errors.New(`ent: missing required field "age"`)}
+	if _, ok := uc.mutation.UID(); !ok {
+		return &ValidationError{Name: "uid", err: errors.New(`ent: missing required field "uid"`)}
 	}
-	if v, ok := uc.mutation.Age(); ok {
-		if err := user.AgeValidator(v); err != nil {
-			return &ValidationError{Name: "age", err: fmt.Errorf(`ent: validator failed for field "age": %w`, err)}
+	if v, ok := uc.mutation.UID(); ok {
+		if err := user.UIDValidator(v); err != nil {
+			return &ValidationError{Name: "uid", err: fmt.Errorf(`ent: validator failed for field "uid": %w`, err)}
 		}
 	}
-	if _, ok := uc.mutation.Name(); !ok {
-		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "name"`)}
+	if _, ok := uc.mutation.Email(); !ok {
+		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "email"`)}
+	}
+	if v, ok := uc.mutation.Email(); ok {
+		if err := user.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "email": %w`, err)}
+		}
 	}
 	return nil
 }
@@ -156,21 +144,21 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
-	if value, ok := uc.mutation.Age(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: user.FieldAge,
-		})
-		_node.Age = value
-	}
-	if value, ok := uc.mutation.Name(); ok {
+	if value, ok := uc.mutation.UID(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: user.FieldName,
+			Column: user.FieldUID,
 		})
-		_node.Name = value
+		_node.UID = value
+	}
+	if value, ok := uc.mutation.Email(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldEmail,
+		})
+		_node.Email = value
 	}
 	return _node, _spec
 }
@@ -189,7 +177,6 @@ func (ucb *UserCreateBulk) Save(ctx context.Context) ([]*User, error) {
 	for i := range ucb.builders {
 		func(i int, root context.Context) {
 			builder := ucb.builders[i]
-			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*UserMutation)
 				if !ok {

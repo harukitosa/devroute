@@ -1,6 +1,8 @@
 package schema
 
 import (
+	"net/mail"
+
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
 )
@@ -13,8 +15,11 @@ type User struct {
 // Fields of the User.
 func (User) Fields() []ent.Field {
 	return []ent.Field{
-		field.Int("age").Positive(),
-		field.String("name").Default("unknown"),
+		field.String("uid").Unique().Immutable().NotEmpty(),
+		field.String("email").Unique().NotEmpty().Validate(func(email string) error {
+			_, err := mail.ParseAddress(email)
+			return err
+		}),
 	}
 }
 
